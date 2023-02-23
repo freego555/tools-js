@@ -1,4 +1,5 @@
 const fs = require('node:fs/promises');
+const { platform } = require('node:process');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
@@ -18,6 +19,8 @@ if (!process.env.RESULT_FILE_PATH) {
   RESULT_FILE_PATH = process.env.RESULT_FILE_PATH;
 }
 
+const pathSeparator = platform === 'win32' ? '\\' : '/';
+
 const readDir = async (dirPath) => {
   let result = `[DIR]${dirPath}\n`;
 
@@ -25,17 +28,17 @@ const readDir = async (dirPath) => {
 
   const files = await fs.readdir(dirPath);
   for (const file of files) {
-    const stat = await fs.stat(`${dirPath}/${file}`);
+    const stat = await fs.stat(`${dirPath}${pathSeparator}${file}`);
     if (stat.isDirectory()) {
       subDirs.push(file);
     } else {
-      result += `${dirPath}/${file}\n`;
+      result += `${dirPath}${pathSeparator}${file}\n`;
     }
   }
 
   // Processing dirs after files
   for (const subDir of subDirs) {
-    const resultSubDir = await readDir(`${dirPath}/${subDir}`);
+    const resultSubDir = await readDir(`${dirPath}${pathSeparator}${subDir}`);
     result += resultSubDir;
   }
 

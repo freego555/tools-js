@@ -65,7 +65,8 @@ const getFileSha256Hash = async (filePath) => {
 const start = async () => {
   console.log('Started:', new Date());
   try {
-    let result = `${tableHeader}`;
+    let result = `Creation date: ${new Date().toISOString()}\n`;
+    result += `${tableHeader}`;
     result += await readDir(DIR_PATH);
     await fs.writeFile(RESULT_FILE_PATH, result);
     console.log(

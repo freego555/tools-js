@@ -1,4 +1,5 @@
-const fs = require('node:fs/promises');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 const { createHash } = require('node:crypto');
 const { platform } = require('node:process');
 const dotenv = require('dotenv');
@@ -29,10 +30,10 @@ const readDir = async (dirPath) => {
 
   const subDirs = [];
 
-  const files = await fs.readdir(dirPath);
+  const files = await fsp.readdir(dirPath);
   for (const file of files) {
     const filePath = `${dirPath}${pathSeparator}${file}`;
-    const stat = await fs.stat(filePath);
+    const stat = await fsp.stat(filePath);
     if (stat.isDirectory()) {
       subDirs.push(file);
     } else {
@@ -57,10 +58,46 @@ const readDir = async (dirPath) => {
 };
 
 const getFileSha256Hash = async (filePath) => {
-  const buffer = await fs.readFile(filePath);
+  const buffer = await readFileBuffer(filePath);
+  return getSha256String(buffer);
+};
+
+const readFileBuffer = async (filePath) =>
+  new Promise((resolve, reject) => {
+    let buffers = [];
+    let buffer;
+    const rs = fs.createReadStream(filePath);
+    rs.on('data', (chunk) => {
+      buffers.push(chunk);
+    });
+    rs.on('end', () => {
+      buffer = Buffer.concat(buffers);
+      resolve(buffer);
+    });
+    rs.on('error', (err) => {
+      reject(err);
+    });
+  });
+
+const getSha256String = (buffer) => {
   const hash = createHash('sha256');
   return hash.update(buffer).digest('hex').toString('base64');
 };
+
+const writeFileViaStream = async (filePath, data, options) =>
+  new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(filePath, options);
+    writeStream.on('finish', () => {
+      resolve('File is written.');
+    });
+    writeStream.write(data, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        writeStream.end();
+      }
+    });
+  });
 
 const start = async () => {
   console.log('Started:', new Date());
@@ -68,7 +105,7 @@ const start = async () => {
     let result = `Creation date: ${new Date().toISOString()}\n`;
     result += `${tableHeader}`;
     result += await readDir(DIR_PATH);
-    await fs.writeFile(RESULT_FILE_PATH, result);
+    await writeFileViaStream(RESULT_FILE_PATH, result, 'utf8');
     console.log(
       `Tree of dirs and files for '${DIR_PATH}' is succesfully written to '${RESULT_FILE_PATH}'`
     );

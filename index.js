@@ -57,32 +57,21 @@ const readDir = async (dirPath) => {
   return result;
 };
 
-const getFileSha256Hash = async (filePath) => {
-  const buffer = await readFileBuffer(filePath);
-  return getSha256String(buffer);
-};
-
-const readFileBuffer = async (filePath) =>
+const getFileSha256Hash = async (filePath) =>
   new Promise((resolve, reject) => {
-    let buffers = [];
-    let buffer;
+    const hash = createHash('sha256');
     const rs = fs.createReadStream(filePath);
     rs.on('data', (chunk) => {
-      buffers.push(chunk);
+      hash.update(chunk);
     });
     rs.on('end', () => {
-      buffer = Buffer.concat(buffers);
-      resolve(buffer);
+      const hashString = hash.digest('hex').toString('base64');
+      resolve(hashString);
     });
     rs.on('error', (err) => {
       reject(err);
     });
   });
-
-const getSha256String = (buffer) => {
-  const hash = createHash('sha256');
-  return hash.update(buffer).digest('hex').toString('base64');
-};
 
 const writeFileViaStream = async (filePath, data, options) =>
   new Promise((resolve, reject) => {

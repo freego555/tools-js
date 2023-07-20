@@ -90,14 +90,14 @@ const writeFileViaStream = async (filePath, data, options) =>
 
 const start = async () => {
   console.log('Started:', new Date());
+  console.log(
+    `Saving tree of dirs and files of a directory '${DIR_PATH}' to '${RESULT_FILE_PATH}'`
+  );
   try {
     let result = `Creation date: ${new Date().toISOString()}\n`;
     result += `${tableHeader}`;
     result += await readDir(DIR_PATH);
     await writeFileViaStream(RESULT_FILE_PATH, result, 'utf8');
-    console.log(
-      `Tree of dirs and files for '${DIR_PATH}' is succesfully written to '${RESULT_FILE_PATH}'`
-    );
   } catch (e) {
     console.error(e);
   }

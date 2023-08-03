@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const { createHash } = require('node:crypto');
 const { platform } = require('node:process');
+const os = require('node:os');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
@@ -23,10 +24,10 @@ if (!process.env.RESULT_FILE_PATH) {
 
 const pathSeparator = platform === 'win32' ? '\\' : '/';
 const tableSeparator = '|';
-const tableHeader = `File ${tableSeparator} SHA256 ${tableSeparator} Created ${tableSeparator} Modified\n`;
+const tableHeader = `File ${tableSeparator} SHA256 ${tableSeparator} Created ${tableSeparator} Modified${os.EOL}`;
 
 const readDir = async (dirPath) => {
-  let result = `[DIR]${dirPath}\n`;
+  let result = `[DIR]${dirPath}${os.EOL}`;
 
   const subDirs = [];
 
@@ -44,7 +45,7 @@ const readDir = async (dirPath) => {
       result += `${preparedPath}`;
       result += `${tableSeparator}${await getFileSha256Hash(filePath)}`;
       result += `${tableSeparator}${stat.birthtime.toISOString()}`;
-      result += `${tableSeparator}${stat.mtime.toISOString()}\n`;
+      result += `${tableSeparator}${stat.mtime.toISOString()}${os.EOL}`;
     }
   }
 
@@ -94,7 +95,7 @@ const start = async () => {
     `Saving tree of dirs and files of a directory '${DIR_PATH}' to '${RESULT_FILE_PATH}'`
   );
   try {
-    let result = `Creation date: ${new Date().toISOString()}\n`;
+    let result = `Creation date: ${new Date().toISOString()}${os.EOL}`;
     result += `${tableHeader}`;
     result += await readDir(DIR_PATH);
     await writeFileViaStream(RESULT_FILE_PATH, result, 'utf8');
